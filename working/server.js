@@ -183,6 +183,16 @@ async function refreshCache() {
         fetchSalesLines()
       ]);
 
+    // Exclude specific users
+    const EXCLUDED_USERS = ['AMEX\\BMAAROUF', 'AMEX\\CCOMAS'];
+    const excludeSales   = r => !EXCLUDED_USERS.includes((r.Operation_User_ID_AMX || '').toUpperCase());
+    const excludeLedger  = r => !EXCLUDED_USERS.includes((r.User_ID || '').toUpperCase());
+
+    openOrders.splice(0, openOrders.length, ...openOrders.filter(excludeSales));
+    shippedNotInvoiced.splice(0, shippedNotInvoiced.length, ...shippedNotInvoiced.filter(excludeSales));
+    delayedOrders.splice(0, delayedOrders.length, ...delayedOrders.filter(excludeSales));
+    overdueInvoices.splice(0, overdueInvoices.length, ...overdueInvoices.filter(excludeLedger));
+
     // Build lines map
     const linesMap = buildLinesMap(salesLines);
 

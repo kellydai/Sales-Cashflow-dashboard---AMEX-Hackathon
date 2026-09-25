@@ -68,7 +68,7 @@
   /* -- BASE TILE -- */
   .tile {
     background: var(--white); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: 22px 24px 20px;
+    box-shadow: var(--shadow); padding: 22px 24px 32px;
     border: 2px solid transparent; position: relative; overflow: hidden;
   }
   .tile-title {
@@ -159,19 +159,15 @@
   .tile-kpi.active .tile-accent { background:var(--red); }
   .tile-kpi .kpi-count {
     font-size:2.8rem; font-weight:800; color:var(--grey-dark);
-    line-height:1; margin-bottom:8px; transition:color var(--transition);
+    line-height:1; margin-bottom:4px; transition:color var(--transition);
   }
   .tile-kpi.active .kpi-count { color:var(--red-dark); }
-  .tile-kpi .kpi-label  { font-size:0.78rem; color:var(--grey-mid); margin-bottom:14px; }
-  .tile-kpi .kpi-amount { font-size:1.3rem; font-weight:700; color:var(--grey-dark); }
-  .tile-kpi.tile-overdue .kpi-amount,
-  .tile-kpi.tile-delayed .kpi-amount { color:var(--red); }
-  .tile-kpi .kpi-sublabel { font-size:0.73rem; color:var(--grey-mid); margin-top:3px; }
+  .tile-kpi .kpi-label  { font-size:0.78rem; color:var(--grey-mid); margin-bottom:16px; }
+  .tile-kpi .kpi-amount { font-size:1.25rem; font-weight:700; color:var(--red); }
+  .tile-kpi .kpi-sublabel { font-size:0.72rem; color:var(--grey-mid); margin-top:2px; letter-spacing:0.02em; }
   .kpi-warning {
-    margin-top:10px; padding:5px 8px; border-radius:5px;
-    background:#fff8e1; border-left:3px solid #f9a825;
-    font-size:0.72rem; color:#7a5c00; line-height:1.5;
-    display:none;
+    margin-top:6px; font-size:0.68rem; color:var(--red);
+    line-height:1.4; display:none;
   }
   .kpi-warning.visible { display:block; }
   .tile-kpi .click-hint {
@@ -501,24 +497,24 @@
       <div class="tile-accent"></div>
       <div class="tile-title">Open Sales Orders</div>
       <div class="kpi-data" id="kpi-orders" style="display:none;">
-        <div class="kpi-count" id="orders-count">—</div>
+        <div class="kpi-count" id="orders-count">&mdash;</div>
         <div class="kpi-label">active orders</div>
-        <div class="kpi-amount" id="orders-amount">—</div>
-        <div class="kpi-sublabel">total order value</div>
+        <div class="kpi-amount" id="orders-amount">&mdash;</div>
+        <div class="kpi-sublabel">open amount (LCY)</div>
         <div class="kpi-warning" id="orders-warning"></div>
       </div>
       <div class="click-hint">View details</div>
     </div>
 
     <!-- TILE 3 — DELAYED DELIVERIES -->
-    <div class="tile tile-kpi tile-delayed" id="tile-delayed" onclick="selectTile('delayed')">
+    <div class="tile tile-kpi" id="tile-delayed" onclick="selectTile('delayed')">
       <div class="tile-accent"></div>
       <div class="tile-title">Delayed Deliveries</div>
       <div class="kpi-data" id="kpi-delayed" style="display:none;">
-        <div class="kpi-count" id="delayed-count">—</div>
+        <div class="kpi-count" id="delayed-count">&mdash;</div>
         <div class="kpi-label">orders past delivery date</div>
-        <div class="kpi-amount amount-red" id="delayed-amount">—</div>
-        <div class="kpi-sublabel">requested delivery overdue</div>
+        <div class="kpi-amount" id="delayed-amount">&mdash;</div>
+        <div class="kpi-sublabel">open amount (LCY)</div>
         <div class="kpi-warning" id="delayed-warning"></div>
       </div>
       <div class="click-hint">View details</div>
@@ -527,25 +523,25 @@
     <!-- TILE 4 — SHIPPED NOT INVOICED -->
     <div class="tile tile-kpi" id="tile-shipped" onclick="selectTile('shipped')">
       <div class="tile-accent"></div>
-      <div class="tile-title">Shipped But Not Invoiced</div>
+      <div class="tile-title" style="white-space:nowrap">Uninvoiced Shipments</div>
       <div class="kpi-data" id="kpi-shipped" style="display:none;">
-        <div class="kpi-count" id="shipped-count">—</div>
+        <div class="kpi-count" id="shipped-count">&mdash;</div>
         <div class="kpi-label">shipments pending invoice</div>
-        <div class="kpi-amount" id="shipped-amount">—</div>
-        <div class="kpi-sublabel">total unbilled value</div>
+        <div class="kpi-amount" id="shipped-amount">&mdash;</div>
+        <div class="kpi-sublabel">uninvoiced amount (LCY)</div>
       </div>
       <div class="click-hint">View details</div>
     </div>
 
     <!-- TILE 5 — OVERDUE INVOICES -->
-    <div class="tile tile-kpi tile-overdue" id="tile-overdue" onclick="selectTile('overdue')">
+    <div class="tile tile-kpi" id="tile-overdue" onclick="selectTile('overdue')">
       <div class="tile-accent"></div>
       <div class="tile-title">Overdue Invoices</div>
       <div class="kpi-data" id="kpi-overdue" style="display:none;">
-        <div class="kpi-count" id="overdue-count">—</div>
+        <div class="kpi-count" id="overdue-count">&mdash;</div>
         <div class="kpi-label">overdue invoices</div>
-        <div class="kpi-amount amount-red" id="overdue-amount">—</div>
-        <div class="kpi-sublabel">total outstanding (EUR)</div>
+        <div class="kpi-amount" id="overdue-amount">&mdash;</div>
+        <div class="kpi-sublabel">outstanding amount (LCY)</div>
       </div>
       <div class="click-hint">View details</div>
     </div>
@@ -690,8 +686,16 @@ function filterLedgerEntries(items) {
    DATA LOADING
 ================================================================ */
 async function loadData() {
+  // Show loading state
+  ['orders','delayed','shipped','overdue'].forEach(id => {
+    document.getElementById('kpi-' + id).style.display = '';
+    document.getElementById(id + '-count').textContent = '...';
+    document.getElementById(id + '-amount').textContent = 'Loading...';
+  });
+
   try {
     const resp = await fetch('/api/data');
+    if (!resp.ok) throw new Error('Server returned HTTP ' + resp.status);
     appData = await resp.json();
 
     // Update refresh timestamp
@@ -703,6 +707,12 @@ async function loadData() {
     refreshAllKPIs();
   } catch(e) {
     console.error('Failed to load data:', e);
+    ['orders','delayed','shipped','overdue'].forEach(id => {
+      document.getElementById(id + '-count').textContent = 'ERR';
+      document.getElementById(id + '-amount').textContent = e.message || 'Connection failed';
+    });
+    document.getElementById('last-refreshed').textContent =
+      'Not connected \u2014 open via http://localhost:3000';
   }
 }
 
@@ -738,20 +748,25 @@ function refreshAllKPIs() {
   const delayed  = filterSalesOrders(appData.delayedOrders);
   const overdue  = filterLedgerEntries(appData.overdueInvoices);
 
+  const linesMap = appData.linesMap || {};
+
   // Open Orders KPI
+  const ordersAmt = orders.reduce((s, r) => s + (linesMap[r.No]?.total || 0), 0);
   document.getElementById('orders-count').textContent  = orders.length;
-  document.getElementById('orders-amount').textContent  = orders.length + ' order' + (orders.length !== 1 ? 's' : '');
+  document.getElementById('orders-amount').textContent  = eur(ordersAmt);
   showIncompleteWarning('orders', orders);
   document.getElementById('kpi-orders').style.display = '';
 
   // Shipped KPI
+  const shippedAmt = shipped.reduce((s, r) => s + (linesMap[r.No]?.uninvoiced || 0), 0);
   document.getElementById('shipped-count').textContent  = shipped.length;
-  document.getElementById('shipped-amount').textContent  = shipped.length + ' shipment' + (shipped.length !== 1 ? 's' : '');
+  document.getElementById('shipped-amount').textContent  = eur(shippedAmt);
   document.getElementById('kpi-shipped').style.display = '';
 
   // Delayed KPI
+  const delayedAmt = delayed.reduce((s, r) => s + (linesMap[r.No]?.total || 0), 0);
   document.getElementById('delayed-count').textContent  = delayed.length;
-  document.getElementById('delayed-amount').textContent  = delayed.length + ' order' + (delayed.length !== 1 ? 's' : '') + ' overdue';
+  document.getElementById('delayed-amount').textContent  = eur(delayedAmt);
   showIncompleteWarning('delayed', delayed);
   document.getElementById('kpi-delayed').style.display = '';
 
@@ -998,7 +1013,7 @@ function selectTile(id) {
 ================================================================ */
 const titleMap = {
   orders:  'Open Sales Orders',
-  shipped: 'Shipped But Not Invoiced',
+  shipped: 'Uninvoiced Shipments',
   delayed: 'Delayed Deliveries \u2014 Requested Date Passed',
   overdue: 'Overdue Invoices',
 };
