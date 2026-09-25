@@ -172,6 +172,6 @@ Invoice No. | Days Overdue | Customer | Due Date | Cur. | Outstanding | AMEX Pro
 
 ## Team
 
-**AMEX Healthcare GmbH - Hackathon 2026**
+**AMEX Healthcare GmbH - Hackathon 2026 - Finance**
 
 Built with the assistance of Claude Code (Anthropic)
