@@ -1,0 +1,13 @@
+{
+  "name": "amex-dashboard",
+  "version": "3.0.0",
+  "description": "AMEX Healthcare Sales & Cashflow Dashboard with BC365 backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0"
+  }
+}

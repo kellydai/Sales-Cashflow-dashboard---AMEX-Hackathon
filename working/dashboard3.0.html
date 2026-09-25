@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales &amp; Cashflow Dashboard — AMEX Healthcare GmbH</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:        #941612;
+    --red-dark:   #7a120f;
+    --red-mid:    #b01a17;
+    --red-light:  #c9201c;
+    --red-tint:   #f5e6e6;
+    --grey:       #4a4949;
+    --grey-dark:  #2b2a2a;
+    --grey-mid:   #555454;
+    --grey-light: #6b6a6a;
+    --grey-pale:  #e0e0e0;
+    --white:      #ffffff;
+    --shadow:     0 2px 14px rgba(0,0,0,0.15);
+    --radius:     10px;
+    --transition: 0.22s ease;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f0eeee;
+    color: var(--grey-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* -- HEADER -- */
+  header {
+    background: linear-gradient(135deg, var(--red-dark) 0%, var(--red) 55%, var(--red-mid) 100%);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 3px 16px rgba(0,0,0,0.25);
+  }
+  header .brand h1 { font-size:1.55rem; font-weight:700; color:var(--white); letter-spacing:0.02em; }
+  header .brand p  { font-size:0.82rem; color:rgba(255,255,255,0.75); margin-top:3px; letter-spacing:0.04em; }
+  header .header-right { text-align:right; }
+  .header-date { color:rgba(255,255,255,0.9); font-size:0.83rem; line-height:1.5; }
+  .header-date strong { display:block; font-size:1rem; color:#fff; }
+  .conn-badge {
+    display:inline-block; margin-top:6px; padding:3px 10px;
+    border-radius:20px; font-size:0.72rem; font-weight:700; letter-spacing:0.05em;
+    background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.25);
+  }
+  .conn-badge.live { background:rgba(100,220,120,0.25); color:#a8ffc0; border-color:rgba(100,220,120,0.4); }
+
+  /* -- MAIN -- */
+  main { flex:1; padding:28px 28px 20px; max-width:1400px; width:100%; margin:0 auto; }
+
+  /* -- TILE ROW -- */
+  .tile-row {
+    display: grid;
+    grid-template-columns: 270px 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  /* -- BASE TILE -- */
+  .tile {
+    background: var(--white); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 22px 24px 20px;
+    border: 2px solid transparent; position: relative; overflow: hidden;
+  }
+  .tile-title {
+    font-size: 0.74rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--grey-mid); margin-bottom: 14px;
+  }
+
+  /* -- FILTER TILE -- */
+  .tile-filter { border-left: 5px solid var(--grey-pale); background: #fafafa; align-self: start; }
+  .tile-filter .tile-title { color: var(--grey); }
+  .tile-filter label {
+    display:block; font-size:0.75rem; color:var(--grey-mid); margin-bottom:4px; font-weight:600;
+  }
+  .tile-filter select, .tile-filter input[type="text"] {
+    width:100%; padding:8px 10px; border:1.5px solid var(--grey-pale);
+    border-radius:6px; font-size:0.88rem; color:var(--grey-dark);
+    background:var(--white); margin-bottom:12px;
+    transition: border-color var(--transition);
+  }
+  .tile-filter select {
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888787' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; cursor:pointer;
+  }
+  .tile-filter select:focus,
+  .tile-filter input[type="text"]:focus { outline:none; border-color:var(--red); }
+  .filter-value-wrap { position:relative; }
+  #filter-value-input { margin-bottom:12px; }
+  .filter-hint { font-size:0.68rem; color:var(--grey-light); margin-top:-8px; margin-bottom:10px; font-style:italic; }
+
+  /* Searchable combo box */
+  .combo-wrap { position:relative; margin-bottom:12px; }
+  .combo-wrap input.combo-input {
+    width:100%; padding:8px 30px 8px 10px; border:1.5px solid var(--grey-pale);
+    border-radius:6px; font-size:0.85rem; color:var(--grey-dark);
+    background:var(--white); transition:border-color var(--transition);
+  }
+  .combo-wrap input.combo-input:focus { outline:none; border-color:var(--red); }
+  .combo-wrap input.combo-input::placeholder { color:var(--grey-light); }
+  .combo-wrap .combo-arrow {
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    pointer-events:none; font-size:0.55rem; color:var(--grey-light);
+  }
+  .combo-list {
+    display:none; position:absolute; left:0; right:0; top:100%; z-index:10;
+    max-height:160px; overflow-y:auto;
+    background:var(--white); border:1.5px solid var(--grey-pale); border-top:none;
+    border-radius:0 0 6px 6px; box-shadow:0 4px 12px rgba(0,0,0,0.12);
+  }
+  .combo-list.open { display:block; }
+  .combo-list .combo-item {
+    padding:6px 10px; font-size:0.82rem; color:var(--grey-dark); cursor:pointer;
+    transition:background 0.1s;
+  }
+  .combo-list .combo-item:hover,
+  .combo-list .combo-item.highlighted { background:var(--red-tint); }
+  .combo-list .combo-item.hidden { display:none; }
+  .combo-list .combo-empty {
+    padding:8px 10px; font-size:0.78rem; color:var(--grey-light); font-style:italic;
+  }
+  .filter-apply-btn {
+    width:100%; padding:9px; background:var(--red); color:var(--white);
+    border:none; border-radius:6px; font-size:0.88rem; font-weight:700;
+    cursor:pointer; letter-spacing:0.04em;
+    transition: background var(--transition), transform 0.1s;
+    margin-top:2px;
+  }
+  .filter-apply-btn:hover  { background:var(--red-dark); }
+  .filter-apply-btn:active { transform:scale(0.98); }
+  .filter-current {
+    margin-top:14px; padding:10px 12px; background:var(--red-tint);
+    border-radius:6px; font-size:0.82rem; color:var(--red-dark);
+    border-left:4px solid var(--red); line-height:1.5;
+  }
+  .filter-current span { font-weight:700; }
+
+  /* -- KPI TILES -- */
+  .tile-kpi {
+    cursor:pointer;
+    transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+  }
+  .tile-kpi:hover { box-shadow:0 6px 24px rgba(148,22,18,0.15); transform:translateY(-2px); }
+  .tile-kpi.active { border-color:var(--red); box-shadow:0 6px 24px rgba(148,22,18,0.22); }
+  .tile-kpi .tile-accent {
+    position:absolute; top:0; left:0; right:0; height:4px;
+    background:var(--grey-pale); border-radius:var(--radius) var(--radius) 0 0;
+  }
+  .tile-kpi.active .tile-accent { background:var(--red); }
+  .tile-kpi .kpi-count {
+    font-size:2.8rem; font-weight:800; color:var(--grey-dark);
+    line-height:1; margin-bottom:8px; transition:color var(--transition);
+  }
+  .tile-kpi.active .kpi-count { color:var(--red-dark); }
+  .tile-kpi .kpi-label  { font-size:0.78rem; color:var(--grey-mid); margin-bottom:14px; }
+  .tile-kpi .kpi-amount { font-size:1.3rem; font-weight:700; color:var(--grey-dark); }
+  .tile-kpi.tile-overdue .kpi-amount,
+  .tile-kpi.tile-delayed .kpi-amount { color:var(--red); }
+  .tile-kpi .kpi-sublabel { font-size:0.73rem; color:var(--grey-mid); margin-top:3px; }
+  .kpi-warning {
+    margin-top:10px; padding:5px 8px; border-radius:5px;
+    background:#fff8e1; border-left:3px solid #f9a825;
+    font-size:0.72rem; color:#7a5c00; line-height:1.5;
+    display:none;
+  }
+  .kpi-warning.visible { display:block; }
+  .tile-kpi .click-hint {
+    position:absolute; bottom:12px; right:16px; font-size:0.68rem;
+    color:var(--grey-pale); letter-spacing:0.05em; transition:color var(--transition);
+  }
+  .tile-kpi:hover .click-hint,
+  .tile-kpi.active .click-hint { color:var(--red-light); }
+  .tile-kpi .click-hint::before { content:'▼ '; }
+  .tile-kpi.active .click-hint::before { content:'▲ '; }
+
+  /* -- SHIMMER -- */
+  .shimmer-wrap { display:flex; flex-direction:column; gap:10px; padding-top:4px; }
+  .shimmer-bar {
+    height:18px; border-radius:4px;
+    background:linear-gradient(90deg, var(--grey-pale) 25%, #f5f5f5 50%, var(--grey-pale) 75%);
+    background-size:400% 100%; animation:shimmer 1.2s infinite;
+  }
+  .shimmer-bar.tall  { height:44px; width:60%; }
+  .shimmer-bar.short { width:80%; }
+  .shimmer-bar.med   { width:55%; }
+  @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+  /* -- MODAL OVERLAY -- */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:1000;
+    background:rgba(0,0,0,0.5); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center;
+    padding:30px;
+    opacity:0; transition:opacity 0.3s ease;
+  }
+  .modal-overlay.open { display:flex; opacity:1; }
+
+  /* -- DETAIL PANEL (modal) -- */
+  #detail-panel {
+    background:var(--white); border-radius:var(--radius);
+    box-shadow:0 8px 40px rgba(0,0,0,0.3); overflow:hidden;
+    width:95vw; max-width:1400px;
+    max-height:85vh; display:flex; flex-direction:column;
+    transform:scale(0.95); transition:transform 0.3s ease;
+  }
+  .modal-overlay.open #detail-panel { transform:scale(1); }
+
+  .detail-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px;
+    background:linear-gradient(90deg, var(--red-dark), var(--red));
+    color:var(--white);
+    flex-shrink:0;
+  }
+  .detail-header h2 { font-size:0.95rem; font-weight:700; letter-spacing:0.04em; }
+  .detail-header .detail-meta { font-size:0.75rem; opacity:0.8; margin-top:2px; }
+  .detail-close-btn {
+    background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.4);
+    color:var(--white); padding:5px 14px; border-radius:5px; font-size:0.8rem;
+    font-weight:600; cursor:pointer; transition:background var(--transition); white-space:nowrap;
+  }
+  .detail-close-btn:hover { background:rgba(255,255,255,0.3); }
+  .detail-toolbar-wrap {
+    padding:14px 22px 0; flex-shrink:0; background:var(--white);
+    border-bottom:1px solid var(--grey-pale);
+  }
+  .detail-body { padding:0 22px 22px; overflow:auto; flex:1; min-height:0; }
+
+  .detail-error {
+    padding:20px; text-align:center; color:var(--red);
+    font-size:0.88rem; background:var(--red-tint); border-radius:6px; margin:10px 0;
+  }
+  .detail-empty {
+    padding:30px; text-align:center; color:var(--grey-light); font-size:0.88rem;
+  }
+
+  table { width:100%; border-collapse:collapse; font-size:0.84rem; }
+  thead th {
+    text-align:left; font-size:0.72rem; font-weight:700; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--grey);
+    border-bottom:2px solid var(--grey-pale); padding:9px 28px 9px 0;
+    position:sticky; top:0; background:var(--white); z-index:3;
+    user-select:none; white-space:nowrap;
+    box-shadow:0 2px 4px rgba(0,0,0,0.06);
+  }
+  thead th:last-child { text-align:right; }
+
+  /* -- Excel-style dropdown button -- */
+  .th-dropdown-btn {
+    position:absolute; right:2px; top:50%; transform:translateY(-50%);
+    width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--grey-pale); border-radius:3px;
+    background:var(--white); cursor:pointer;
+    font-size:0.55rem; color:var(--grey-light);
+    transition:all 0.15s ease;
+  }
+  .th-dropdown-btn:hover { border-color:var(--grey-mid); color:var(--grey-dark); background:#f5f5f5; }
+  .th-dropdown-btn.filtered { background:var(--red-tint); border-color:var(--red); color:var(--red); }
+  .th-dropdown-btn.sorted   { color:var(--red); }
+  .th-dropdown-btn.open     { border-color:var(--red); background:var(--red-tint); color:var(--red); }
+
+  /* -- Dropdown popup -- */
+  .col-popup {
+    display:none; position:fixed;
+    width:260px;
+    background:var(--white); border:1px solid #c0c0c0;
+    border-radius:6px; box-shadow:0 4px 20px rgba(0,0,0,0.22);
+    z-index:2000; overflow:hidden;
+    font-size:0.8rem; text-transform:none; letter-spacing:0; font-weight:400;
+  }
+  .col-popup.open { display:block; }
+
+  /* Sort section */
+  .cp-sort {
+    padding:6px 0; border-bottom:1px solid #e0e0e0;
+  }
+  .cp-sort-btn {
+    display:flex; align-items:center; gap:8px;
+    width:100%; padding:7px 14px; border:none; background:none;
+    font-size:0.8rem; color:var(--grey-dark); cursor:pointer;
+    text-align:left; transition:background 0.12s;
+  }
+  .cp-sort-btn:hover { background:#f0f0f0; }
+  .cp-sort-btn.active { color:var(--red); font-weight:700; }
+  .cp-sort-btn .sort-icon { font-size:0.75rem; width:16px; text-align:center; }
+
+  /* Filter section */
+  .cp-filter-header {
+    padding:8px 12px 4px; font-size:0.68rem; font-weight:700;
+    color:var(--grey-light); text-transform:uppercase; letter-spacing:0.06em;
+  }
+  .cp-search {
+    width:calc(100% - 24px); margin:4px 12px 6px; padding:6px 8px;
+    border:1px solid var(--grey-pale); border-radius:4px;
+    font-size:0.78rem; color:var(--grey-dark); background:#fafafa; outline:none;
+  }
+  .cp-search:focus { border-color:var(--red); background:var(--white); }
+  .cp-toggle-row {
+    display:flex; gap:0; padding:0 12px 4px; font-size:0.72rem;
+  }
+  .cp-toggle-row button {
+    padding:2px 8px; border:none; background:none; color:var(--red);
+    font-size:0.72rem; font-weight:600; cursor:pointer; border-radius:3px;
+  }
+  .cp-toggle-row button:hover { background:var(--red-tint); }
+  .cp-toggle-row .sep { color:var(--grey-pale); padding:0 2px; }
+  .cp-list {
+    max-height:200px; overflow-y:auto; border-top:1px solid #eee;
+    border-bottom:1px solid #eee;
+  }
+  .cp-list label {
+    display:flex; align-items:center; gap:7px; padding:5px 12px; cursor:pointer;
+    font-size:0.78rem; color:var(--grey-dark); transition:background 0.1s;
+  }
+  .cp-list label:hover { background:#f5f5f5; }
+  .cp-list label.hidden { display:none; }
+  .cp-list input[type="checkbox"] { accent-color:var(--red); flex-shrink:0; width:14px; height:14px; }
+  .cp-list .val-count { color:var(--grey-light); font-size:0.7rem; margin-left:auto; }
+  .cp-footer {
+    display:flex; gap:8px; padding:8px 12px; background:#fafafa;
+  }
+  .cp-footer button {
+    flex:1; padding:7px 0; border:none; border-radius:5px;
+    font-size:0.8rem; font-weight:700; cursor:pointer;
+    transition:background 0.15s, transform 0.1s;
+  }
+  .cp-footer button:active { transform:scale(0.97); }
+  .cp-ok-btn { background:var(--red); color:var(--white); }
+  .cp-ok-btn:hover { background:var(--red-dark); }
+  .cp-cancel-btn { background:var(--grey-pale); color:var(--grey-dark); }
+  .cp-cancel-btn:hover { background:#d4d4d4; }
+  tbody tr { border-bottom:1px solid #ececec; transition:background var(--transition); }
+  tbody tr:nth-child(even) { background:#f9f8f8; }
+  tbody tr:hover { background:var(--red-tint); }
+  tbody td { padding:10px 12px 10px 0; color:var(--grey-dark); }
+  tbody td:last-child { text-align:right; font-weight:600; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; }
+  .badge-open    { background:#e6f0fb; color:#1d5fa6; }
+  .badge-partial { background:#fff4e0; color:#9a6200; }
+  .badge-release { background:#e8f5e9; color:#2e7d32; }
+  .amount-red    { color:var(--red); font-weight:700; }
+  a.bc-link {
+    color:var(--red); text-decoration:none; font-weight:700; border-bottom:1px dashed var(--red-light);
+    transition:color var(--transition), border-color var(--transition);
+  }
+  a.bc-link:hover { color:var(--red-dark); border-bottom-style:solid; }
+
+  /* -- TABLE TOOLBAR -- */
+  .table-toolbar {
+    display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;
+  }
+  .table-search {
+    flex:1; min-width:200px; padding:8px 12px; border:1.5px solid var(--grey-pale);
+    border-radius:6px; font-size:0.85rem; color:var(--grey-dark); background:#fafafa;
+    transition:border-color var(--transition);
+  }
+  .table-search:focus { outline:none; border-color:var(--red); background:var(--white); }
+  .table-search::placeholder { color:var(--grey-light); }
+  .toolbar-btn {
+    padding:7px 16px; border-radius:6px; font-size:0.8rem; font-weight:700;
+    cursor:pointer; letter-spacing:0.03em; transition:background var(--transition), transform 0.1s;
+    white-space:nowrap; border:none;
+  }
+  .toolbar-btn:active { transform:scale(0.97); }
+  .btn-excel {
+    background:#1d6f42; color:var(--white);
+  }
+  .btn-excel:hover { background:#165a35; }
+  .table-match-count {
+    font-size:0.78rem; color:var(--grey-light); white-space:nowrap;
+  }
+  .row-incomplete td { background:#fffdf0; }
+  .row-incomplete td:first-child { border-left:3px solid #f9a825; }
+  .warn-cell { color:#9a6200; font-weight:600; }
+  .warn-icon { font-style:normal; margin-right:3px; }
+
+  /* -- FOOTER -- */
+  footer {
+    text-align:center; padding:12px 24px; font-size:0.74rem;
+    color:var(--grey-mid); background:#e4e3e3;
+    border-top:1px solid #ccc; letter-spacing:0.04em;
+  }
+
+  /* -- RESPONSIVE -- */
+  @media (max-width: 1100px) {
+    .tile-row { grid-template-columns: 270px 1fr 1fr; }
+  }
+  @media (max-width: 900px) {
+    .tile-row { grid-template-columns: 1fr 1fr; }
+    header { flex-direction:column; gap:10px; text-align:center; }
+  }
+  @media (max-width: 540px) {
+    .tile-row { grid-template-columns: 1fr; }
+    main { padding:16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <h1>Sales &amp; Cashflow Dashboard</h1>
+    <p>AMEX Healthcare GmbH &nbsp;&middot;&nbsp; Business Central 365</p>
+  </div>
+  <div class="header-right">
+    <div class="header-date">
+      <strong id="hdr-date"></strong>
+      <span>Real-time KPI Overview</span>
+    </div>
+    <div class="conn-badge live" id="conn-badge">&#9679; Cached — BC365</div>
+    <span id="last-refreshed" style="display:block;font-size:0.7rem;color:rgba(255,255,255,0.65);margin-top:3px;">Last refresh: —</span>
+    <button onclick="manualRefresh()" id="refresh-btn" style="margin-top:6px;padding:4px 12px;border:1px solid rgba(255,255,255,0.4);border-radius:5px;background:rgba(255,255,255,0.15);color:white;font-size:0.72rem;font-weight:600;cursor:pointer;">&#8635; Refresh Now</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <div class="tile-row">
+
+    <!-- TILE 1 — FILTER -->
+    <div class="tile tile-filter">
+      <div class="tile-title">Filter</div>
+
+      <label for="filter-type">Filter By</label>
+      <select id="filter-type" onchange="onFilterTypeChange()">
+        <option value="all">— All Records —</option>
+        <option value="user">User</option>
+        <option value="unassigned_user">&#9888; Unassigned User</option>
+        <option value="unassigned_date">&#9888; No Delivery Date</option>
+        <option value="dept">Department</option>
+        <option value="custno">Customer No.</option>
+        <option value="custname">Customer Name</option>
+      </select>
+
+      <div id="filter-value-wrap" style="display:none;">
+        <label for="filter-value-input" id="filter-value-label">Value</label>
+        <input type="text" id="filter-value-input" placeholder="">
+        <div class="filter-hint" id="filter-hint"></div>
+      </div>
+
+      <div id="filter-user-wrap" style="display:none;">
+        <label>User</label>
+        <div class="combo-wrap" id="combo-user">
+          <input type="text" class="combo-input" placeholder="Type or select a user..." autocomplete="off">
+          <span class="combo-arrow">&#9662;</span>
+          <div class="combo-list"></div>
+        </div>
+        <div class="filter-hint" id="filter-user-hint">Type to search or click to select</div>
+      </div>
+
+      <div id="filter-dept-wrap" style="display:none;">
+        <label>Department</label>
+        <div class="combo-wrap" id="combo-dept">
+          <input type="text" class="combo-input" placeholder="Type or select a department..." autocomplete="off">
+          <span class="combo-arrow">&#9662;</span>
+          <div class="combo-list"></div>
+        </div>
+        <div class="filter-hint" id="filter-dept-hint">Type to search or click to select</div>
+      </div>
+
+      <div id="filter-custno-wrap" style="display:none;">
+        <label>Customer No.</label>
+        <div class="combo-wrap" id="combo-custno">
+          <input type="text" class="combo-input" placeholder="Type or select a customer..." autocomplete="off">
+          <span class="combo-arrow">&#9662;</span>
+          <div class="combo-list"></div>
+        </div>
+        <div class="filter-hint" id="filter-custno-hint">Type to search or click to select</div>
+      </div>
+
+      <div id="filter-custname-wrap" style="display:none;">
+        <label>Customer Name</label>
+        <div class="combo-wrap" id="combo-custname">
+          <input type="text" class="combo-input" placeholder="Type or select a customer..." autocomplete="off">
+          <span class="combo-arrow">&#9662;</span>
+          <div class="combo-list"></div>
+        </div>
+        <div class="filter-hint" id="filter-custname-hint">Type to search or click to select</div>
+      </div>
+
+      <button class="filter-apply-btn" id="apply-btn" onclick="applyFilter()">Apply Filter</button>
+
+      <div class="filter-current" id="filter-display">
+        <span>Showing:</span> All Records
+      </div>
+    </div>
+
+    <!-- TILE 2 — OPEN SALES ORDERS -->
+    <div class="tile tile-kpi" id="tile-orders" onclick="selectTile('orders')">
+      <div class="tile-accent"></div>
+      <div class="tile-title">Open Sales Orders</div>
+      <div class="kpi-data" id="kpi-orders" style="display:none;">
+        <div class="kpi-count" id="orders-count">—</div>
+        <div class="kpi-label">active orders</div>
+        <div class="kpi-amount" id="orders-amount">—</div>
+        <div class="kpi-sublabel">total order value</div>
+        <div class="kpi-warning" id="orders-warning"></div>
+      </div>
+      <div class="click-hint">View details</div>
+    </div>
+
+    <!-- TILE 3 — DELAYED DELIVERIES -->
+    <div class="tile tile-kpi tile-delayed" id="tile-delayed" onclick="selectTile('delayed')">
+      <div class="tile-accent"></div>
+      <div class="tile-title">Delayed Deliveries</div>
+      <div class="kpi-data" id="kpi-delayed" style="display:none;">
+        <div class="kpi-count" id="delayed-count">—</div>
+        <div class="kpi-label">orders past delivery date</div>
+        <div class="kpi-amount amount-red" id="delayed-amount">—</div>
+        <div class="kpi-sublabel">requested delivery overdue</div>
+        <div class="kpi-warning" id="delayed-warning"></div>
+      </div>
+      <div class="click-hint">View details</div>
+    </div>
+
+    <!-- TILE 4 — SHIPPED NOT INVOICED -->
+    <div class="tile tile-kpi" id="tile-shipped" onclick="selectTile('shipped')">
+      <div class="tile-accent"></div>
+      <div class="tile-title">Shipped But Not Invoiced</div>
+      <div class="kpi-data" id="kpi-shipped" style="display:none;">
+        <div class="kpi-count" id="shipped-count">—</div>
+        <div class="kpi-label">shipments pending invoice</div>
+        <div class="kpi-amount" id="shipped-amount">—</div>
+        <div class="kpi-sublabel">total unbilled value</div>
+      </div>
+      <div class="click-hint">View details</div>
+    </div>
+
+    <!-- TILE 5 — OVERDUE INVOICES -->
+    <div class="tile tile-kpi tile-overdue" id="tile-overdue" onclick="selectTile('overdue')">
+      <div class="tile-accent"></div>
+      <div class="tile-title">Overdue Invoices</div>
+      <div class="kpi-data" id="kpi-overdue" style="display:none;">
+        <div class="kpi-count" id="overdue-count">—</div>
+        <div class="kpi-label">overdue invoices</div>
+        <div class="kpi-amount amount-red" id="overdue-amount">—</div>
+        <div class="kpi-sublabel">total outstanding (EUR)</div>
+      </div>
+      <div class="click-hint">View details</div>
+    </div>
+
+  </div><!-- /tile-row -->
+</main>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="onOverlayClick(event)">
+  <div id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <h2 id="detail-title">Detail</h2>
+        <div class="detail-meta" id="detail-meta"></div>
+      </div>
+      <button class="detail-close-btn" onclick="closeDetail()">&#10005; Close</button>
+    </div>
+    <div class="detail-toolbar-wrap" id="table-toolbar" style="display:none;">
+      <div class="table-toolbar">
+        <input type="text" class="table-search" id="table-search" placeholder="Search in table..." oninput="filterTable()">
+        <span class="table-match-count" id="table-match-count"></span>
+        <button class="toolbar-btn btn-excel" onclick="exportExcel()">&#11015; Export Excel</button>
+      </div>
+    </div>
+    <div class="detail-body">
+      <div id="detail-table-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer id="footer-bar">
+  v3.0 &nbsp;&middot;&nbsp; Cached Data: Auto-refresh hourly &middot; Business Central OData v4 &nbsp;&middot;&nbsp;
+  Customer_Ledger_Entries_Excel &amp; Sales_Order_Excel &nbsp;&middot;&nbsp; AMEX Healthcare GmbH
+</footer>
+
+<script>
+/* ================================================================
+   CONFIG
+================================================================ */
+const BC_WEB  = 'https://bc365.amex-healthcare.com/AmexProd/';
+const BC_COMPANY = 'AMEX Healthcare GmbH';
+
+function bcLink(page, field, value) {
+  return BC_WEB + '?company=' + encodeURIComponent(BC_COMPANY)
+    + '&page=' + page
+    + "&filter='" + encodeURIComponent(field) + "' IS '" + encodeURIComponent(value) + "'";
+}
+function bcOrderLink(orderNo) { return bcLink(42, 'No.', orderNo); }
+function bcInvoiceLink(docNo) { return bcLink(25, 'Document No.', docNo); }
+
+/* ================================================================
+   STATE
+================================================================ */
+let appData      = null; // cached data from server
+let activeTile   = null;
+let activeFilter = { type: 'all', value: '' };
+
+/* ================================================================
+   HELPERS
+================================================================ */
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+
+const eur = v =>
+  '\u20AC' + Number(v || 0).toLocaleString('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+function fmtAmt(v) {
+  return Number(v || 0).toLocaleString('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+// Department code → name mapping (from BC Dimension Value List - DEPARTMENT)
+const DEPT_MAP = {
+  '0':'Kenya', '1':'United', '2':'Atomics', '3':'Pharma',
+  '4':'United', '5':'Finance', '6':'Quality', '7':'Overall',
+  '8':'Kitting', '9':'Digital / IT', '10':'United',
+  '11':'Amex Health Projects'
+};
+// Departments 1, 4 and 10 are merged as "United"
+const DEPT_MERGE = { '1':'United', '4':'United', '10':'United' };
+function deptName(code) { return DEPT_MAP[code] || code || '\u2014'; }
+
+function safe(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function daysDiff(dateStr) {
+  if (!dateStr || dateStr.startsWith('0001')) return 0;
+  const diff = Date.now() - new Date(dateStr);
+  return diff > 0 ? Math.ceil(diff / 86400000) : 0;
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr || dateStr.startsWith('0001')) return '\u2014';
+  return dateStr.split('T')[0];
+}
+
+/* ================================================================
+   CLIENT-SIDE FILTERING
+================================================================ */
+function filterSalesOrders(items) {
+  const { type, value } = activeFilter;
+  if (!value) return items;
+  return items.filter(r => {
+    if (type === 'unassigned_user') return !r.Operation_User_ID_AMX;
+    if (type === 'unassigned_date') return !r.Requested_Delivery_Date || r.Requested_Delivery_Date.startsWith('0001');
+    if (type === 'user') {
+      const uid = (value.includes('\\') ? value : 'AMEX\\' + value).toUpperCase();
+      return (r.Operation_User_ID_AMX || '').toUpperCase() === uid;
+    }
+    if (type === 'dept') {
+      // Find all codes that map to the selected dept name
+      const deptCodes = Object.keys(DEPT_MAP).filter(k => DEPT_MAP[k].toUpperCase() === deptName(value).toUpperCase());
+      return deptCodes.includes(r.Shortcut_Dimension_2_Code);
+    }
+    if (type === 'custno') return r.Sell_to_Customer_No === value;
+    if (type === 'custname') return (r.Sell_to_Customer_Name || '').toLowerCase().includes(value.toLowerCase());
+    return true;
+  });
+}
+
+function filterLedgerEntries(items) {
+  const { type, value } = activeFilter;
+  if (!value) return items;
+  return items.filter(r => {
+    if (type === 'unassigned_user') return !r.User_ID;
+    if (type === 'unassigned_date') return true; // ledger entries don't have this field
+    if (type === 'user') {
+      const uid = (value.includes('\\') ? value : 'AMEX\\' + value).toUpperCase();
+      return (r.User_ID || '').toUpperCase() === uid;
+    }
+    if (type === 'dept') {
+      const deptCodes = Object.keys(DEPT_MAP).filter(k => DEPT_MAP[k].toUpperCase() === deptName(value).toUpperCase());
+      return deptCodes.includes(r.Global_Dimension_2_Code);
+    }
+    if (type === 'custno') return r.Customer_No === value;
+    if (type === 'custname') return (r.Customer_Name || '').toLowerCase().includes(value.toLowerCase());
+    return true;
+  });
+}
+
+/* ================================================================
+   DATA LOADING
+================================================================ */
+async function loadData() {
+  try {
+    const resp = await fetch('/api/data');
+    appData = await resp.json();
+
+    // Update refresh timestamp
+    if (appData.lastRefreshed) {
+      const d = new Date(appData.lastRefreshed);
+      document.getElementById('last-refreshed').textContent = 'Last refresh: ' + d.toLocaleString('en-GB');
+    }
+
+    refreshAllKPIs();
+  } catch(e) {
+    console.error('Failed to load data:', e);
+  }
+}
+
+/* ================================================================
+   INCOMPLETE / WARNING HELPERS
+================================================================ */
+function isMissingUser(r)  { return !r.Operation_User_ID_AMX; }
+function isMissingDate(r)  { return !r.Requested_Delivery_Date || r.Requested_Delivery_Date.startsWith('0001'); }
+function isIncomplete(r)   { return isMissingUser(r) || isMissingDate(r); }
+
+function showIncompleteWarning(tileId, items) {
+  const el        = document.getElementById(tileId + '-warning');
+  if (!el) return;
+  const noUser    = items.filter(isMissingUser).length;
+  const noDate    = items.filter(isMissingDate).length;
+  if (noUser === 0 && noDate === 0) { el.classList.remove('visible'); return; }
+  const parts = [];
+  if (noUser > 0) parts.push(noUser + ' unassigned user');
+  if (noDate > 0) parts.push(noDate + ' no delivery date');
+  el.textContent = '\u26A0 ' + parts.join(' \u00B7 ');
+  el.classList.add('visible');
+}
+
+/* ================================================================
+   KPI RENDER
+================================================================ */
+function refreshAllKPIs() {
+  if (!appData) return;
+
+  // Filter cached data client-side
+  const orders   = filterSalesOrders(appData.openOrders);
+  const shipped  = filterSalesOrders(appData.shippedNotInvoiced);
+  const delayed  = filterSalesOrders(appData.delayedOrders);
+  const overdue  = filterLedgerEntries(appData.overdueInvoices);
+
+  // Open Orders KPI
+  document.getElementById('orders-count').textContent  = orders.length;
+  document.getElementById('orders-amount').textContent  = orders.length + ' order' + (orders.length !== 1 ? 's' : '');
+  showIncompleteWarning('orders', orders);
+  document.getElementById('kpi-orders').style.display = '';
+
+  // Shipped KPI
+  document.getElementById('shipped-count').textContent  = shipped.length;
+  document.getElementById('shipped-amount').textContent  = shipped.length + ' shipment' + (shipped.length !== 1 ? 's' : '');
+  document.getElementById('kpi-shipped').style.display = '';
+
+  // Delayed KPI
+  document.getElementById('delayed-count').textContent  = delayed.length;
+  document.getElementById('delayed-amount').textContent  = delayed.length + ' order' + (delayed.length !== 1 ? 's' : '') + ' overdue';
+  showIncompleteWarning('delayed', delayed);
+  document.getElementById('kpi-delayed').style.display = '';
+
+  // Overdue KPI
+  const overdueTotal = overdue.reduce((s, r) => s + (r.Remaining_Amount || 0), 0);
+  document.getElementById('overdue-count').textContent  = overdue.length;
+  document.getElementById('overdue-amount').textContent  = eur(overdueTotal);
+  document.getElementById('kpi-overdue').style.display = '';
+
+  // Refresh open detail panel
+  if (activeTile) renderTable(activeTile);
+}
+
+/* ================================================================
+   FILTER UI
+================================================================ */
+function onFilterTypeChange() {
+  const type = document.getElementById('filter-type').value;
+
+  // Hide all filter inputs
+  ['filter-value-wrap','filter-user-wrap','filter-dept-wrap','filter-custno-wrap','filter-custname-wrap']
+    .forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('filter-value-input').value = '';
+
+  if (type === 'unassigned_user' || type === 'unassigned_date') {
+    // No input needed
+  } else if (type === 'user') {
+    document.getElementById('filter-user-wrap').style.display = 'block';
+    loadUserDropdown();
+  } else if (type === 'dept') {
+    document.getElementById('filter-dept-wrap').style.display = 'block';
+    loadDeptDropdown();
+  } else if (type === 'custno') {
+    document.getElementById('filter-custno-wrap').style.display = 'block';
+    loadCustNoDropdown();
+  } else if (type === 'custname') {
+    document.getElementById('filter-custname-wrap').style.display = 'block';
+    loadCustomerDropdown();
+  }
+}
+
+/* ── Searchable combo box engine ── */
+function initCombo(wrapId, items, hintId) {
+  // items: [{ value, label }]
+  const wrap  = document.getElementById(wrapId);
+  const input = wrap.querySelector('.combo-input');
+  const list  = wrap.querySelector('.combo-list');
+
+  // Build items
+  list.innerHTML = '';
+  items.forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'combo-item';
+    div.dataset.value = it.value;
+    div.textContent   = it.label;
+    div.addEventListener('click', () => {
+      input.value = it.label;
+      input.dataset.selectedValue = it.value;
+      list.classList.remove('open');
+    });
+    list.appendChild(div);
+  });
+
+  if (hintId) {
+    document.getElementById(hintId).textContent = items.length + ' items — type to search';
+  }
+
+  // Reset
+  input.value = '';
+  input.dataset.selectedValue = '';
+
+  // Open on focus/click
+  input.addEventListener('focus', () => { filterComboList(input, list); list.classList.add('open'); });
+  input.addEventListener('click', () => { filterComboList(input, list); list.classList.add('open'); });
+
+  // Filter on typing
+  input.addEventListener('input', () => {
+    input.dataset.selectedValue = '';
+    filterComboList(input, list);
+    list.classList.add('open');
+  });
+
+  // Enter to apply filter
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      // If there's exactly one visible item, select it
+      const visible = list.querySelectorAll('.combo-item:not(.hidden)');
+      if (visible.length === 1) {
+        visible[0].click();
+      }
+      list.classList.remove('open');
+      applyFilter();
+    } else if (e.key === 'Escape') {
+      list.classList.remove('open');
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target)) list.classList.remove('open');
+  });
+}
+
+function filterComboList(input, list) {
+  const q = input.value.toLowerCase();
+  let anyVisible = false;
+  list.querySelectorAll('.combo-item').forEach(div => {
+    const match = div.textContent.toLowerCase().includes(q);
+    div.classList.toggle('hidden', !match);
+    if (match) anyVisible = true;
+  });
+  // Show/hide empty message
+  let emptyMsg = list.querySelector('.combo-empty');
+  if (!anyVisible) {
+    if (!emptyMsg) {
+      emptyMsg = document.createElement('div');
+      emptyMsg.className = 'combo-empty';
+      emptyMsg.textContent = 'No matches found';
+      list.appendChild(emptyMsg);
+    }
+    emptyMsg.style.display = '';
+  } else if (emptyMsg) {
+    emptyMsg.style.display = 'none';
+  }
+}
+
+function getComboValue(wrapId) {
+  const wrap  = document.getElementById(wrapId);
+  const input = wrap.querySelector('.combo-input');
+  return input.dataset.selectedValue || input.value.trim();
+}
+
+/* ── Dropdown loaders ── */
+function loadUserDropdown() {
+  if (!appData) return;
+  const userSet = new Set();
+  [...appData.openOrders, ...appData.shippedNotInvoiced, ...appData.delayedOrders].forEach(r => {
+    if (r.Operation_User_ID_AMX) userSet.add(r.Operation_User_ID_AMX);
+  });
+  appData.overdueInvoices.forEach(r => {
+    if (r.User_ID) userSet.add(r.User_ID);
+  });
+  const items = Array.from(userSet).sort().map(u => ({
+    value: u,
+    label: u.replace('AMEX\\', '')
+  }));
+  initCombo('combo-user', items, 'filter-user-hint');
+}
+
+function loadDeptDropdown() {
+  // Deduplicate merged departments (e.g. "United" appears once, not 3 times)
+  const seen = new Set();
+  const items = [];
+  Object.entries(DEPT_MAP)
+    .sort((a, b) => a[1].localeCompare(b[1]))
+    .forEach(([code, name]) => {
+      if (!seen.has(name)) {
+        seen.add(name);
+        // For merged depts, show all codes; otherwise just the one
+        const codes = Object.keys(DEPT_MAP).filter(k => DEPT_MAP[k] === name);
+        items.push({
+          value: code,
+          label: name + (codes.length > 1 ? '  (' + codes.join(', ') + ')' : '  (' + code + ')')
+        });
+      }
+    });
+  initCombo('combo-dept', items, 'filter-dept-hint');
+}
+
+function loadCustNoDropdown() {
+  if (!appData) return;
+  const items = [...appData.customerList]
+    .sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true }))
+    .map(c => ({
+      value: c.no,
+      label: c.no + '  \u2014  ' + c.name
+    }));
+  initCombo('combo-custno', items, 'filter-custno-hint');
+}
+
+function loadCustomerDropdown() {
+  if (!appData) return;
+  const items = appData.customerList.map(c => ({
+    value: c.name,
+    label: c.name + '  (' + c.no + ')'
+  }));
+  initCombo('combo-custname', items, 'filter-custname-hint');
+}
+
+function applyFilter() {
+  const type  = document.getElementById('filter-type').value;
+  let value;
+  if (type === 'user')          value = getComboValue('combo-user');
+  else if (type === 'dept')     value = getComboValue('combo-dept');
+  else if (type === 'custno')   value = getComboValue('combo-custno');
+  else if (type === 'custname') value = getComboValue('combo-custname');
+  else                          value = document.getElementById('filter-value-input').value.trim();
+  activeFilter = { type, value };
+
+  let label;
+  if (type === 'unassigned_user') {
+    activeFilter.value = '_flag_';
+    label = '\u26A0 <span>Unassigned User</span>';
+  } else if (type === 'unassigned_date') {
+    activeFilter.value = '_flag_';
+    label = '\u26A0 <span>No Delivery Date</span>';
+  } else if (type === 'all' || !value) {
+    activeFilter.value = '';
+    label = 'All Records';
+  } else if (type === 'user') {
+    label = 'User: <span>' + safe(value.replace('AMEX\\', '')) + '</span>';
+  } else if (type === 'dept') {
+    label = 'Department: <span>' + safe(deptName(value)) + '</span>';
+  } else if (type === 'custno') {
+    label = 'Customer No.: <span>' + safe(value) + '</span>';
+  } else if (type === 'custname') {
+    label = 'Customer Name: <span>' + safe(value) + '</span>';
+  }
+  document.getElementById('filter-display').innerHTML = '<span>Showing:</span> ' + label;
+
+  refreshAllKPIs();
+}
+
+/* ================================================================
+   TILE SELECTION
+================================================================ */
+function selectTile(id) {
+  if (activeTile === id) {
+    document.getElementById('tile-' + id).classList.remove('active');
+    activeTile = null;
+    closeDetail();
+    return;
+  }
+  ['orders','shipped','delayed','overdue'].forEach(t =>
+    document.getElementById('tile-' + t).classList.remove('active')
+  );
+  activeTile = id;
+  document.getElementById('tile-' + id).classList.add('active');
+  openDetail(id);
+}
+
+/* ================================================================
+   DETAIL PANEL
+================================================================ */
+const titleMap = {
+  orders:  'Open Sales Orders',
+  shipped: 'Shipped But Not Invoiced',
+  delayed: 'Delayed Deliveries \u2014 Requested Date Passed',
+  overdue: 'Overdue Invoices',
+};
+
+function openDetail(id) {
+  const overlay = document.getElementById('modal-overlay');
+  document.getElementById('detail-title').textContent = titleMap[id];
+  document.getElementById('detail-meta').textContent  = '';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';  // prevent background scroll
+  renderTable(id);
+}
+
+function closeDetail() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  if (activeTile) {
+    document.getElementById('tile-' + activeTile).classList.remove('active');
+    activeTile = null;
+  }
+}
+
+function onOverlayClick(e) {
+  // Close when clicking the dark backdrop, not the panel itself
+  if (e.target === document.getElementById('modal-overlay')) closeDetail();
+}
+
+/* ================================================================
+   RENDER TABLE (synchronous — data is already local)
+================================================================ */
+function renderTable(id) {
+  if (!appData) return;
+
+  const container = document.getElementById('detail-table-container');
+  const meta      = document.getElementById('detail-meta');
+
+  let html = '';
+
+  if (id === 'orders') {
+    const items    = filterSalesOrders(appData.openOrders);
+    const linesMap = appData.linesMap;
+    const grandTotal      = items.reduce((s, r) => s + (linesMap[r.No]?.total      || 0), 0);
+    const grandUninvoiced = items.reduce((s, r) => s + (linesMap[r.No]?.uninvoiced || 0), 0);
+    meta.textContent = items.length + ' records \u00B7 Total: ' + eur(grandTotal) + ' \u00B7 Uninvoiced: ' + eur(grandUninvoiced);
+    if (!items.length) {
+      html = '<div class="detail-empty">No open sales orders found for the current filter.</div>';
+    } else {
+      html = `<table><thead><tr>
+        <th>Order No.</th><th>Customer</th><th>Country</th><th>Dept</th><th>User</th>
+        <th>Order Date</th><th>Req. Delivery</th><th>Status</th><th>Days Open</th>
+        <th>Cur.</th><th style="text-align:right">Total Amt</th><th style="text-align:right">Uninvoiced</th>
+      </tr></thead><tbody>`;
+      items.forEach(r => {
+        const incomplete = isIncomplete(r);
+        const rowCls     = incomplete ? ' class="row-incomplete"' : '';
+        const status = r.Status === 'Released'
+          ? '<span class="badge badge-release">Released</span>'
+          : r.Completely_Shipped
+            ? '<span class="badge badge-partial">Shipped</span>'
+            : '<span class="badge badge-open">Open</span>';
+        const dept       = deptName(r.Shortcut_Dimension_2_Code);
+        const rawUser    = r.Operation_User_ID_AMX;
+        const user       = rawUser ? rawUser.replace('AMEX\\', '') : '<em class="warn-cell"><i class="warn-icon">\u26A0</i>Unassigned</em>';
+        const days       = daysDiff(r.Document_Date);
+        const rawDate    = r.Requested_Delivery_Date;
+        const delivDate  = (!rawDate || rawDate.startsWith('0001'))
+          ? '<em class="warn-cell"><i class="warn-icon">\u26A0</i>Not set</em>'
+          : fmtDate(rawDate);
+        const total      = linesMap[r.No]?.total      || 0;
+        const uninvoiced = linesMap[r.No]?.uninvoiced || 0;
+        html += `<tr${rowCls}>
+          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in Business Central">${safe(r.No)}</a></td>
+          <td>${safe(r.Sell_to_Customer_Name)}</td>
+          <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
+          <td>${safe(dept)}</td>
+          <td>${user}</td>
+          <td>${fmtDate(r.Document_Date)}</td>
+          <td>${delivDate}</td>
+          <td>${status}</td>
+          <td>${days} days</td>
+          <td>${safe(r.Currency_Code || 'EUR')}</td>
+          <td style="text-align:right;font-weight:600">${fmtAmt(total)}</td>
+          <td style="text-align:right;font-weight:600;color:var(--red)">${fmtAmt(uninvoiced)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+
+  } else if (id === 'shipped') {
+    const items    = filterSalesOrders(appData.shippedNotInvoiced);
+    const linesMap = appData.linesMap;
+    const shipMap  = appData.shipmentMap;
+    const grandTotal      = items.reduce((s, r) => s + (linesMap[r.No]?.total      || 0), 0);
+    const grandUninvoiced = items.reduce((s, r) => s + (linesMap[r.No]?.uninvoiced || 0), 0);
+    const shipMapLoaded   = Object.keys(shipMap).length > 0;
+    meta.textContent = items.length + ' records \u00B7 Total: ' + eur(grandTotal) + ' \u00B7 Uninvoiced: ' + eur(grandUninvoiced);
+    if (!items.length) {
+      html = '<div class="detail-empty">No shipped-but-not-invoiced orders found for the current filter.</div>';
+    } else {
+      html = `<table><thead><tr>
+        <th>Order No.</th><th>Customer</th><th>Country</th><th>Dept</th><th>User</th>
+        <th>Order Date</th><th>Posting Date</th><th>Days Waiting</th>
+        <th>Cur.</th><th style="text-align:right">Total Amt</th><th style="text-align:right">Uninvoiced</th>
+      </tr></thead><tbody>`;
+      items.forEach(r => {
+        const dept  = deptName(r.Shortcut_Dimension_2_Code);
+        const user  = (r.Operation_User_ID_AMX || '\u2014').replace('AMEX\\', '');
+        const sh         = shipMap[r.No];
+        const shipNos    = sh?.nos?.join(', ') || (shipMapLoaded ? '\u2014' : '<em style="color:var(--grey-light);font-size:.85em">n/a</em>');
+        // Days waiting = from Posting_Date of latest posted shipment; fall back to Document_Date only if no shipment found
+        const waitDate   = sh?.latestDate || r.Document_Date;
+        const days       = daysDiff(waitDate);
+        const daysCls    = days > 14 ? ' class="amount-red"' : '';
+        const total      = linesMap[r.No]?.total      || 0;
+        const uninvoiced = linesMap[r.No]?.uninvoiced || 0;
+        html += `<tr>
+          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in Business Central">${safe(r.No)}</a></td>
+          <td>${safe(r.Sell_to_Customer_Name)}</td>
+          <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
+          <td>${safe(dept)}</td>
+          <td>${safe(user)}</td>
+          <td>${fmtDate(r.Order_Date)}</td>
+          <td>${fmtDate(r.Posting_Date)}</td>
+          <td${daysCls}>${days} days</td>
+          <td>${safe(r.Currency_Code || 'EUR')}</td>
+          <td style="text-align:right;font-weight:600">${fmtAmt(total)}</td>
+          <td style="text-align:right;font-weight:600;color:var(--red)">${fmtAmt(uninvoiced)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+
+  } else if (id === 'delayed') {
+    const items    = filterSalesOrders(appData.delayedOrders);
+    const linesMap = appData.linesMap;
+    const grandTotal      = items.reduce((s, r) => s + (linesMap[r.No]?.total      || 0), 0);
+    const grandUninvoiced = items.reduce((s, r) => s + (linesMap[r.No]?.uninvoiced || 0), 0);
+    meta.textContent = items.length + ' records \u00B7 Total: ' + eur(grandTotal) + ' \u00B7 Uninvoiced: ' + eur(grandUninvoiced);
+    if (!items.length) {
+      html = '<div class="detail-empty">No delayed delivery orders found for the current filter.</div>';
+    } else {
+      html = `<table><thead><tr>
+        <th>Order No.</th><th>Customer</th><th>Country</th><th>Dept</th><th>User</th>
+        <th>Order Date</th><th>Requested Delivery</th><th>Days Overdue</th>
+        <th>Cur.</th><th style="text-align:right">Total Amt</th><th style="text-align:right">Uninvoiced</th>
+      </tr></thead><tbody>`;
+      items.forEach(r => {
+        const incomplete = isMissingUser(r);   // date is already filtered for delayed
+        const rowCls     = incomplete ? ' class="row-incomplete"' : '';
+        const days       = daysDiff(r.Requested_Delivery_Date);
+        const rawUser    = r.Operation_User_ID_AMX;
+        const user       = rawUser ? rawUser.replace('AMEX\\', '') : '<em class="warn-cell"><i class="warn-icon">\u26A0</i>Unassigned</em>';
+        const dept       = deptName(r.Shortcut_Dimension_2_Code);
+        const total      = linesMap[r.No]?.total      || 0;
+        const uninvoiced = linesMap[r.No]?.uninvoiced || 0;
+        html += `<tr${rowCls}>
+          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in Business Central">${safe(r.No)}</a></td>
+          <td>${safe(r.Sell_to_Customer_Name)}</td>
+          <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
+          <td>${safe(dept)}</td>
+          <td>${user}</td>
+          <td>${fmtDate(r.Document_Date)}</td>
+          <td class="amount-red">${fmtDate(r.Requested_Delivery_Date)}</td>
+          <td class="amount-red">${days} days</td>
+          <td>${safe(r.Currency_Code || 'EUR')}</td>
+          <td style="text-align:right;font-weight:600">${fmtAmt(total)}</td>
+          <td style="text-align:right;font-weight:600;color:var(--red)">${fmtAmt(uninvoiced)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+
+  } else if (id === 'overdue') {
+    const items = filterLedgerEntries(appData.overdueInvoices);
+    const total = items.reduce((s, r) => s + (r.Remaining_Amount || 0), 0);
+    meta.textContent = items.length + ' records \u00B7 Outstanding: ' + eur(total);
+    if (!items.length) {
+      html = '<div class="detail-empty">No overdue invoices found for the current filter.</div>';
+    } else {
+      html = `<table><thead><tr>
+        <th>Invoice No.</th><th>Days Overdue</th><th>Customer</th><th>Due Date</th>
+        <th>Cur.</th><th style="text-align:right">Outstanding</th><th>AMEX Project No</th>
+        <th>User</th><th>Dept</th><th>Country</th>
+      </tr></thead><tbody>`;
+      items.forEach(r => {
+        const days = daysDiff(r.Due_Date);
+        html += `<tr>
+          <td><a class="bc-link" href="${bcInvoiceLink(r.Document_No)}" target="_blank" title="Open in Business Central">${safe(r.Document_No)}</a></td>
+          <td class="amount-red">${days} days</td>
+          <td>${safe(r.Customer_Name)}</td>
+          <td>${fmtDate(r.Due_Date)}</td>
+          <td>${safe(r.Currency_Code || 'EUR')}</td>
+          <td class="amount-red" style="text-align:right">${fmtAmt(r.Remaining_Amount)}</td>
+          <td>${safe(r.Global_Dimension_1_Code || '\u2014')}</td>
+          <td>${safe((r.User_ID || '\u2014').replace('AMEX\\', ''))}</td>
+          <td>${deptName(r.Global_Dimension_2_Code)}</td>
+          <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+  }
+
+  container.innerHTML = html;
+  // Show toolbar & reset search
+  const toolbar = document.getElementById('table-toolbar');
+  const searchInput = document.getElementById('table-search');
+  toolbar.style.display = 'flex';
+  searchInput.value = '';
+  currentSortCol = -1;
+  currentSortDir = 'asc';
+  setupTableFeatures();
+  const totalRows = container.querySelectorAll('tbody tr').length;
+  document.getElementById('table-match-count').textContent = totalRows + ' records';
+}
+
+/* ================================================================
+   TABLE SEARCH, COLUMN FILTER, SORT & EXCEL EXPORT
+================================================================ */
+
+// -- State --
+let currentSortCol  = -1;
+let currentSortDir  = '';      // '' | 'asc' | 'desc'
+let colFilterState  = {};      // { colIdx: Set of allowed values }
+let openPopup       = null;
+let openPopupCol    = -1;
+
+// -- Close popup --
+function closePopup() {
+  if (openPopup) { openPopup.remove(); openPopup = null; }
+  document.querySelectorAll('.th-dropdown-btn.open').forEach(b => b.classList.remove('open'));
+  openPopupCol = -1;
+}
+document.addEventListener('click', e => {
+  if (openPopup && !e.target.closest('.col-popup') && !e.target.closest('.th-dropdown-btn')) closePopup();
+});
+
+// -- Setup: add dropdown button to each th --
+function setupTableFeatures() {
+  const table = document.querySelector('#detail-table-container table');
+  if (!table) return;
+  colFilterState = {};
+  currentSortCol = -1;
+  currentSortDir = '';
+  closePopup();
+
+  table.querySelectorAll('thead tr:first-child th').forEach((th, i) => {
+    const btn = document.createElement('span');
+    btn.className = 'th-dropdown-btn';
+    btn.innerHTML = '\u25BE';
+    btn.dataset.col = i;
+    btn.addEventListener('click', e => { e.stopPropagation(); openColumnPopup(i, btn); });
+    th.appendChild(btn);
+  });
+}
+
+// -- Build & position popup --
+function openColumnPopup(colIdx, btn) {
+  if (openPopupCol === colIdx) { closePopup(); return; }
+  closePopup();
+
+  const table = document.querySelector('#detail-table-container table');
+  if (!table) return;
+
+  // Collect unique values
+  const rows   = Array.from(table.querySelectorAll('tbody tr'));
+  const valMap = new Map();
+  rows.forEach(tr => {
+    const text = (tr.children[colIdx]?.textContent || '').trim();
+    valMap.set(text, (valMap.get(text) || 0) + 1);
+  });
+  const allValues = Array.from(valMap.keys()).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  );
+  const allowed = colFilterState[colIdx]; // undefined = all
+
+  // Build popup
+  const popup = document.createElement('div');
+  popup.className = 'col-popup open';
+  popup.addEventListener('click', e => e.stopPropagation());
+
+  // Sort section
+  const sortSec = document.createElement('div');
+  sortSec.className = 'cp-sort';
+
+  const sortAsc = document.createElement('button');
+  sortAsc.className = 'cp-sort-btn' + (currentSortCol === colIdx && currentSortDir === 'asc' ? ' active' : '');
+  sortAsc.innerHTML = '<span class="sort-icon">\u25B2</span> Sort A \u2192 Z (Ascending)';
+  sortAsc.addEventListener('click', () => { doSort(colIdx, 'asc'); closePopup(); });
+
+  const sortDesc = document.createElement('button');
+  sortDesc.className = 'cp-sort-btn' + (currentSortCol === colIdx && currentSortDir === 'desc' ? ' active' : '');
+  sortDesc.innerHTML = '<span class="sort-icon">\u25BC</span> Sort Z \u2192 A (Descending)';
+  sortDesc.addEventListener('click', () => { doSort(colIdx, 'desc'); closePopup(); });
+
+  sortSec.appendChild(sortAsc);
+  sortSec.appendChild(sortDesc);
+  popup.appendChild(sortSec);
+
+  // Filter header
+  const fh = document.createElement('div');
+  fh.className = 'cp-filter-header';
+  fh.textContent = 'Filter';
+  popup.appendChild(fh);
+
+  // Search
+  const search = document.createElement('input');
+  search.type = 'text';
+  search.className = 'cp-search';
+  search.placeholder = 'Search\u2026';
+  popup.appendChild(search);
+
+  // Select All / Deselect All
+  const toggleRow = document.createElement('div');
+  toggleRow.className = 'cp-toggle-row';
+  const selAll = document.createElement('button');
+  selAll.textContent = 'Select All';
+  const sep = document.createElement('span');
+  sep.className = 'sep';
+  sep.textContent = '|';
+  const deselAll = document.createElement('button');
+  deselAll.textContent = 'Deselect All';
+  toggleRow.appendChild(selAll);
+  toggleRow.appendChild(sep);
+  toggleRow.appendChild(deselAll);
+  popup.appendChild(toggleRow);
+
+  // Checkbox list
+  const list = document.createElement('div');
+  list.className = 'cp-list';
+
+  allValues.forEach(val => {
+    const lbl  = document.createElement('label');
+    const cb   = document.createElement('input');
+    cb.type    = 'checkbox';
+    cb.value   = val;
+    cb.checked = allowed ? allowed.has(val) : true;
+    const txt  = document.createElement('span');
+    txt.textContent = val || '(empty)';
+    txt.style.overflow = 'hidden';
+    txt.style.textOverflow = 'ellipsis';
+    txt.style.whiteSpace = 'nowrap';
+    txt.style.flex = '1';
+    const cnt  = document.createElement('span');
+    cnt.className = 'val-count';
+    cnt.textContent = valMap.get(val);
+    lbl.appendChild(cb);
+    lbl.appendChild(txt);
+    lbl.appendChild(cnt);
+    list.appendChild(lbl);
+  });
+  popup.appendChild(list);
+
+  // Search filtering
+  search.addEventListener('input', () => {
+    const q = search.value.toLowerCase();
+    list.querySelectorAll('label').forEach(lbl => {
+      const match = lbl.textContent.toLowerCase().includes(q);
+      lbl.classList.toggle('hidden', !match);
+    });
+  });
+
+  selAll.addEventListener('click', () => {
+    list.querySelectorAll('label:not(.hidden) input').forEach(cb => cb.checked = true);
+  });
+  deselAll.addEventListener('click', () => {
+    list.querySelectorAll('label:not(.hidden) input').forEach(cb => cb.checked = false);
+  });
+
+  // Footer: OK / Cancel
+  const footer = document.createElement('div');
+  footer.className = 'cp-footer';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cp-cancel-btn';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => closePopup());
+
+  const okBtn = document.createElement('button');
+  okBtn.className = 'cp-ok-btn';
+  okBtn.textContent = 'OK';
+  okBtn.addEventListener('click', () => {
+    const checked = new Set();
+    list.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => checked.add(cb.value));
+    if (checked.size === allValues.length) {
+      delete colFilterState[colIdx];
+    } else {
+      colFilterState[colIdx] = checked;
+    }
+    closePopup();
+    applyAllFilters();
+    updateDropdownBtnStates();
+  });
+
+  footer.appendChild(cancelBtn);
+  footer.appendChild(okBtn);
+  popup.appendChild(footer);
+
+  // Position: fixed, near the button
+  document.body.appendChild(popup);
+  const rect = btn.getBoundingClientRect();
+  let left = rect.right - 260;
+  if (left < 8) left = 8;
+  let top = rect.bottom + 4;
+  if (top + 400 > window.innerHeight) top = rect.top - popup.offsetHeight - 4;
+  popup.style.left = left + 'px';
+  popup.style.top  = top + 'px';
+
+  openPopup    = popup;
+  openPopupCol = colIdx;
+  btn.classList.add('open');
+
+  setTimeout(() => search.focus(), 50);
+}
+
+// -- Sort --
+function doSort(colIdx, dir) {
+  const table = document.querySelector('#detail-table-container table');
+  if (!table) return;
+  currentSortCol = colIdx;
+  currentSortDir = dir;
+
+  const tbody = table.querySelector('tbody');
+  const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+  rows.sort((a, b) => {
+    const aText = (a.children[colIdx]?.textContent || '').trim();
+    const bText = (b.children[colIdx]?.textContent || '').trim();
+    const aNum = parseFloat(aText.replace(/[\u20AC,\s]/g, '').replace('days', ''));
+    const bNum = parseFloat(bText.replace(/[\u20AC,\s]/g, '').replace('days', ''));
+    let cmp;
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      cmp = aNum - bNum;
+    } else {
+      cmp = aText.localeCompare(bText, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+  updateDropdownBtnStates();
+}
+
+// -- Update button visual states --
+function updateDropdownBtnStates() {
+  const table = document.querySelector('#detail-table-container table');
+  if (!table) return;
+  table.querySelectorAll('thead tr:first-child th').forEach((th, i) => {
+    const btn = th.querySelector('.th-dropdown-btn');
+    if (!btn) return;
+    btn.classList.toggle('filtered', !!colFilterState[i]);
+    btn.classList.toggle('sorted', currentSortCol === i);
+  });
+}
+
+// -- Apply all filters --
+function applyAllFilters() {
+  const table = document.querySelector('#detail-table-container table');
+  if (!table) return;
+
+  const globalQuery = (document.getElementById('table-search')?.value || '').toLowerCase();
+  const rows  = table.querySelectorAll('tbody tr');
+  let shown   = 0;
+
+  rows.forEach(tr => {
+    const cells = tr.querySelectorAll('td');
+    let match   = true;
+
+    for (const [col, allowed] of Object.entries(colFilterState)) {
+      const text = (cells[col]?.textContent || '').trim();
+      if (!allowed.has(text)) { match = false; break; }
+    }
+
+    if (match && globalQuery) {
+      match = tr.textContent.toLowerCase().includes(globalQuery);
+    }
+
+    tr.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+
+  document.getElementById('table-match-count').textContent =
+    shown + ' of ' + rows.length + ' shown';
+}
+
+function filterTable() {
+  applyAllFilters();
+}
+
+function exportExcel() {
+  const table = document.querySelector('#detail-table-container table');
+  if (!table) return;
+
+  const title = document.getElementById('detail-title').textContent || 'Export';
+  const rows  = [];
+
+  // Header row
+  const ths = table.querySelectorAll('thead th');
+  const header = [];
+  ths.forEach(th => header.push(th.textContent.trim()));
+  rows.push(header);
+
+  // Data rows (only visible if filtered)
+  table.querySelectorAll('tbody tr').forEach(tr => {
+    if (tr.style.display === 'none') return;
+    const cells = [];
+    tr.querySelectorAll('td').forEach(td => {
+      // Strip HTML, get clean text
+      const text = td.textContent.trim();
+      // Try to preserve numbers for Excel
+      const num  = text.replace(/[\u20AC,\s]/g, '').replace('days', '').trim();
+      cells.push(isNaN(num) || num === '' || num === '\u2014' ? text : Number(num));
+    });
+    rows.push(cells);
+  });
+
+  // Build CSV with BOM for Excel compatibility
+  const BOM = '\uFEFF';
+  const csv = rows.map(row =>
+    row.map(cell => {
+      const s = String(cell);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? '"' + s.replace(/"/g, '""') + '"'
+        : s;
+    }).join(',')
+  ).join('\r\n');
+
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = title.replace(/[^a-zA-Z0-9 _-]/g, '') + '_' + todayISO() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================================================================
+   MANUAL REFRESH
+================================================================ */
+async function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '\u21BB Refreshing\u2026';
+  try {
+    await fetch('/api/refresh', { method: 'POST' });
+    // Poll status until done
+    let refreshing = true;
+    while (refreshing) {
+      await new Promise(r => setTimeout(r, 2000));
+      const status = await (await fetch('/api/status')).json();
+      refreshing = status.refreshing;
+    }
+    await loadData();
+  } catch(e) {
+    console.error('Refresh failed:', e);
+  }
+  btn.disabled = false;
+  btn.textContent = '\u21BB Refresh Now';
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+(function init() {
+  const now = new Date();
+  document.getElementById('hdr-date').textContent = now.toLocaleDateString('en-GB', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+  document.getElementById('filter-value-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') applyFilter();
+  });
+  loadData();
+})();
+</script>
+</body>
+</html>
