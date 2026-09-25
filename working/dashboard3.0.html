@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales &amp; Cashflow Dashboard — AMEX Healthcare GmbH</title>
+<title>WeTrack — AMEX Healthcare GmbH</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -406,8 +406,8 @@
 <!-- HEADER -->
 <header>
   <div class="brand">
-    <h1>Sales &amp; Cashflow Dashboard</h1>
-    <p>AMEX Healthcare GmbH &nbsp;&middot;&nbsp; Business Central 365</p>
+    <h1>WeTrack</h1>
+    <p>AMEX Healthcare GmbH &nbsp;&middot;&nbsp; SOFIA</p>
   </div>
   <div class="header-right">
     <div class="header-date">
@@ -509,7 +509,7 @@
     <!-- TILE 3 — DELAYED DELIVERIES -->
     <div class="tile tile-kpi" id="tile-delayed" onclick="selectTile('delayed')">
       <div class="tile-accent"></div>
-      <div class="tile-title">Delayed Deliveries</div>
+      <div class="tile-title">Delayed SOs</div>
       <div class="kpi-data" id="kpi-delayed" style="display:none;">
         <div class="kpi-count" id="delayed-count">&mdash;</div>
         <div class="kpi-label">orders past delivery date</div>
@@ -574,7 +574,7 @@
 
 <!-- FOOTER -->
 <footer id="footer-bar">
-  v3.0 &nbsp;&middot;&nbsp; Cached Data: Auto-refresh hourly &middot; Business Central OData v4 &nbsp;&middot;&nbsp;
+  v3.0 &nbsp;&middot;&nbsp; Cached Data: Auto-refresh hourly &middot; SOFIA OData v4 &nbsp;&middot;&nbsp;
   Customer_Ledger_Entries_Excel &amp; Sales_Order_Excel &nbsp;&middot;&nbsp; AMEX Healthcare GmbH
 </footer>
 
@@ -1014,7 +1014,7 @@ function selectTile(id) {
 const titleMap = {
   orders:  'Open Sales Orders',
   shipped: 'Uninvoiced Shipments',
-  delayed: 'Delayed Deliveries \u2014 Requested Date Passed',
+  delayed: 'Delayed SOs \u2014 Requested Date Passed',
   overdue: 'Overdue Invoices',
 };
 
@@ -1086,7 +1086,7 @@ function renderTable(id) {
         const total      = linesMap[r.No]?.total      || 0;
         const uninvoiced = linesMap[r.No]?.uninvoiced || 0;
         html += `<tr${rowCls}>
-          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in Business Central">${safe(r.No)}</a></td>
+          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in SOFIA">${safe(r.No)}</a></td>
           <td>${safe(r.Sell_to_Customer_Name)}</td>
           <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
           <td>${safe(dept)}</td>
@@ -1131,7 +1131,7 @@ function renderTable(id) {
         const total      = linesMap[r.No]?.total      || 0;
         const uninvoiced = linesMap[r.No]?.uninvoiced || 0;
         html += `<tr>
-          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in Business Central">${safe(r.No)}</a></td>
+          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in SOFIA">${safe(r.No)}</a></td>
           <td>${safe(r.Sell_to_Customer_Name)}</td>
           <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
           <td>${safe(dept)}</td>
@@ -1171,7 +1171,7 @@ function renderTable(id) {
         const total      = linesMap[r.No]?.total      || 0;
         const uninvoiced = linesMap[r.No]?.uninvoiced || 0;
         html += `<tr${rowCls}>
-          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in Business Central">${safe(r.No)}</a></td>
+          <td><a class="bc-link" href="${bcOrderLink(r.No)}" target="_blank" title="Open in SOFIA">${safe(r.No)}</a></td>
           <td>${safe(r.Sell_to_Customer_Name)}</td>
           <td>${safe(r.Destination_Country_AMX || '\u2014')}</td>
           <td>${safe(dept)}</td>
@@ -1202,7 +1202,7 @@ function renderTable(id) {
       items.forEach(r => {
         const days = daysDiff(r.Due_Date);
         html += `<tr>
-          <td><a class="bc-link" href="${bcInvoiceLink(r.Document_No)}" target="_blank" title="Open in Business Central">${safe(r.Document_No)}</a></td>
+          <td><a class="bc-link" href="${bcInvoiceLink(r.Document_No)}" target="_blank" title="Open in SOFIA">${safe(r.Document_No)}</a></td>
           <td class="amount-red">${days} days</td>
           <td>${safe(r.Customer_Name)}</td>
           <td>${fmtDate(r.Due_Date)}</td>
